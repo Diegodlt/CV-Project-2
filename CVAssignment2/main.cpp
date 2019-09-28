@@ -8,7 +8,7 @@ using namespace std;
 
 int main() {
 	cv::Mat image = cv::imread("bicycle.bmp");
-	int boxSize = 3;
+	int boxSize = 3; // Default box size
 
 	if (image.empty()) {
 		cout << "Image is Empty" << endl;
@@ -16,26 +16,33 @@ int main() {
 	}
 
 	cout << image.cols << " + " << image.rows << endl;
+	cout << "Enter box size: "; cin >> boxSize;
 
 	cv::Mat newImage(cv::Size(image.cols, image.rows), CV_8UC3);
 
-	for (int i = 1; i < image.rows - 1; i++) {
-		for (int j = 1; j < image.cols - 1; j++) {
+	int div = boxSize / 2;
+
+	for (int i = div; i < image.rows - div ; i++) {
+		for (int j = div; j < image.cols - div; j++) {
 			for (int c = 0; c < image.channels(); c++) {
-				newImage.at<cv::Vec3b>(i, j)[c] = (
-					image.at<cv::Vec3b>(i - 1, j - 1)[c] + image.at<cv::Vec3b>(i - 1, j)[c] + image.at<cv::Vec3b>(i - 1, j + 1)[c]
-					+ image.at<cv::Vec3b>(i, j - 1)[c] + image.at<cv::Vec3b>(i, j)[c] + image.at<cv::Vec3b>(i, j + 1)[c]
-					+ image.at<cv::Vec3b>(i + 1, j - 1)[c] + image.at<cv::Vec3b>(i + 1, j)[c] + image.at<cv::Vec3b>(i + 1, j + 1)[c]
-					)/9;
+				int  avg = 0;
+				for (int k = 0; k < boxSize; k++) {
+					for (int n = 0; n < boxSize; n++) {
+						int x = div - k;
+						int y = div - n;
+						avg += image.at<cv::Vec3b>(i - x, j - y)[c];
+					}
+				}
+				newImage.at<cv::Vec3b>(i, j)[c] = (avg) / (boxSize*boxSize);
 			}
 		}
 	}
 	cv::Mat result;
-	cv::blur(image, result, cv::Size(5, 5));
+	cv::blur(image, result, cv::Size(boxSize, boxSize));
 
-	cv::imshow("Blur", result);
-	cv::imshow("Image", image);
-	cv::imshow("New", newImage);
+	cv::imshow("CV Blur", result);
+	cv::imshow("Original", image);
+	cv::imshow("Custom Blur", newImage);
 
 	cv::waitKey(0);
 	return 0;
