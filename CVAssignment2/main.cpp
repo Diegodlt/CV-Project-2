@@ -33,10 +33,12 @@ int main() {
 		cout << "Image is Empty" << endl;
 		exit(0);
 	}
-	// Create new image and assign the dimension of the box
+	// Create some images and assign them dimension of the input image
 	cv::Mat newImage(cv::Size(image.cols, image.rows), CV_8U);
 	cv::Mat xImage(cv::Size(image.cols, image.rows), CV_8U);
 	cv::Mat yImage(cv::Size(image.cols, image.rows), CV_8U);
+	cv::Mat sobelX(cv::Size(image.cols, image.rows), CV_8U);
+	cv::Mat sobelY(cv::Size(image.cols, image.rows), CV_8U);
 
 	// Get input from user
 	cout << image.cols << " + " << image.rows << endl;
@@ -58,14 +60,16 @@ int main() {
 	// Built-in OpenCV functions
 	//cv::Mat cvBlur;
 	//cv::blur(image, cvBlur, cv::Size(boxSize, boxSize));
-	cv::Sobel(image, xImage, CV_16S, 1, 0);
-	cv::Sobel(image, yImage, CV_16S, 1, 0);
-	cv::Mat sobel = abs(xImage) + abs(yImage);
+	/*cv::Sobel(image, xImage, CV_16S, 1, 0);
+	cv::Sobel(image, yImage, CV_16S, 1, 0);*/
+	cv::Sobel(image, sobelX, CV_8U, 1, 0);
+	cv::Sobel(image, sobelY, CV_8U, 0, 1);
+	cv::Mat sobel = abs(sobelX) + abs(sobelY);
 	cv::imshow("Sobel", sobel);
 
 	/* Resutls */
 	//cv::imshow("CV Blur", cvBlur);
-	//cv::imshow("Original", image);
+	cv::imshow("Original", image);
 	cv::imshow("Custom Filter", newImage);
 
 	cv::waitKey(0);
@@ -92,7 +96,6 @@ void applyBoxFilter(cv::Mat& image, cv::Mat& dest ) {
 }
 
 void applySobelFilter(cv::Mat& image, cv::Mat& dest, bool xdir) {
-
 
 	for (int i = num; i < image.rows - num; i++) {
 		for (int j = num; j < image.cols - num; j++) {
