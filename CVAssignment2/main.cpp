@@ -25,7 +25,7 @@ void applySobelFilter(cv::Mat& image, cv::Mat& dest, bool xdir);
 void calculateTotalSobel(cv::Mat xImage, cv::Mat yImage, cv::Mat& dest);
 
 int main() {
-	cv::Mat image = cv::imread("bicycle.bmp", cv::IMREAD_GRAYSCALE);
+	cv::Mat image = cv::imread("einstein.jpg", cv::IMREAD_GRAYSCALE);
 	num = boxSize / 2;
 
 	// Exit if image is empty
@@ -48,18 +48,24 @@ int main() {
 
 	// Sobel X-direction
 	applySobelFilter(image, xImage, true);
-	cv::imshow("Sobel X", xImage);
+	//cv::imshow("Sobel X", xImage);
 	// Sobel Y-direction
 	applySobelFilter(image, yImage, false);
-	cv::imshow("Sobel Y", yImage);
+	//cv::imshow("Sobel Y", yImage);
 	
 	calculateTotalSobel(xImage, yImage, newImage);
-	// Built-in OpenCV function
+
+	// Built-in OpenCV functions
 	//cv::Mat cvBlur;
 	//cv::blur(image, cvBlur, cv::Size(boxSize, boxSize));
+	cv::Sobel(image, xImage, CV_16S, 1, 0);
+	cv::Sobel(image, yImage, CV_16S, 1, 0);
+	cv::Mat sobel = abs(xImage) + abs(yImage);
+	cv::imshow("Sobel", sobel);
 
+	/* Resutls */
 	//cv::imshow("CV Blur", cvBlur);
-	cv::imshow("Original", image);
+	//cv::imshow("Original", image);
 	cv::imshow("Custom Filter", newImage);
 
 	cv::waitKey(0);
