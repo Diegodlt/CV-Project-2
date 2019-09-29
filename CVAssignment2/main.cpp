@@ -9,16 +9,22 @@ int num = 0;
 int boxSize = 3;// Default box size
 
 const int sobelX[3][3] = {
-	{ 1, 0 , -1},
-	{2, 0, -2},
-	{1, 0 -1}
+	{-1, 0 , 1},
+	{-2, 0, 2},
+	{-1, 0, 1}
+};
+
+const int sobelY[3][3] = {
+	{-1, -2, -1},
+	{0, 0, 0},
+	{1, 2, 1}
 };
 
 void applyBoxFilter(cv::Mat& image, cv::Mat& dest);
-void applySobelFilter(cv::Mat& image, cv::Mat& dest);
+void applySobelFilter(cv::Mat& image, cv::Mat& dest, bool xdir);
 
 int main() {
-	cv::Mat image = cv::imread("bicycle.bmp", cv::IMREAD_GRAYSCALE);
+	cv::Mat image = cv::imread("einstein.jpg", cv::IMREAD_GRAYSCALE);
 
 	// Exit if image is empty
 	if (image.empty()) {
@@ -36,7 +42,11 @@ int main() {
 	num = boxSize / 2;
 
 	//applyBoxFilter(image, newImage);
-	applySobelFilter(image, newImage);
+	applySobelFilter(image, newImage, true);
+	cv::imshow("Sobel X", newImage);
+
+	applySobelFilter(image, newImage, false);
+	cv::imshow("Sobel Y", newImage);
 	
 	// Built-in OpenCV function
 	//cv::Mat cvBlur;
@@ -69,7 +79,8 @@ void applyBoxFilter(cv::Mat& image, cv::Mat& dest ) {
 	}
 }
 
-void applySobelFilter(cv::Mat& image, cv::Mat& dest) {
+void applySobelFilter(cv::Mat& image, cv::Mat& dest, bool xdir) {
+
 
 	for (int i = num; i < image.rows - num; i++) {
 		for (int j = num; j < image.cols - num; j++) {
@@ -78,7 +89,12 @@ void applySobelFilter(cv::Mat& image, cv::Mat& dest) {
 				for (int n = 0; n < boxSize; n++) {
 					int x = num - k;
 					int y = num - n;
-					sum += image.at<uchar>(i - x, j - y) * sobelX[k][n];
+					if (xdir) {
+						sum += image.at<uchar>(i - x, j - y) * sobelX[k][n];
+					}
+					else {
+						sum += image.at<uchar>(i - x, j - y) * sobelY[k][n];
+					}
 				}
 			}
 			dest.at<uchar>(i, j) = cv::saturate_cast<uchar>(sum);
