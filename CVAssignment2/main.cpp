@@ -34,7 +34,9 @@ int main() {
 		exit(0);
 	}
 	// Create some images and assign them dimension of the input image
-	cv::Mat newImage(cv::Size(image.cols, image.rows), CV_8U);
+	cv::Mat sobelCustom(cv::Size(image.cols, image.rows), CV_8U);
+	cv::Mat blurCustom(cv::Size(image.cols, image.rows), CV_8U);
+	cv::Mat gaussBlur(cv::Size(image.cols, image.rows), CV_8U);
 	cv::Mat xImage(cv::Size(image.cols, image.rows), CV_8U);
 	cv::Mat yImage(cv::Size(image.cols, image.rows), CV_8U);
 	cv::Mat sobelX(cv::Size(image.cols, image.rows), CV_8U);
@@ -46,7 +48,7 @@ int main() {
 	cout << "Enter box size: "; cin >> boxSize;
 
 	// Box filter
-	//applyBoxFilter(image, newImage);
+	//applyBoxFilter(image, blurCustom);
 
 	// Sobel X-direction
 	applySobelFilter(image, xImage, true);
@@ -55,22 +57,24 @@ int main() {
 	applySobelFilter(image, yImage, false);
 	//cv::imshow("Sobel Y", yImage);
 	
-	calculateTotalSobel(xImage, yImage, newImage);
+	calculateTotalSobel(xImage, yImage, sobelCustom);
 
 	// Built-in OpenCV functions
-	//cv::Mat cvBlur;
-	//cv::blur(image, cvBlur, cv::Size(boxSize, boxSize));
-	/*cv::Sobel(image, xImage, CV_16S, 1, 0);
-	cv::Sobel(image, yImage, CV_16S, 1, 0);*/
+	cv::Mat cvBlur;
+	cv::blur(image, cvBlur, cv::Size(boxSize, boxSize));
+
 	cv::Sobel(image, sobelX, CV_8U, 1, 0);
 	cv::Sobel(image, sobelY, CV_8U, 0, 1);
-	cv::Mat sobel = abs(sobelX) + abs(sobelY);
-	cv::imshow("Sobel", sobel);
+	cv::Mat sobelCV = abs(sobelX) + abs(sobelY);
+
+	cv::GaussianBlur(image, gaussBlur, cv::Size(0,0), 1);
 
 	/* Resutls */
 	//cv::imshow("CV Blur", cvBlur);
 	cv::imshow("Original", image);
-	cv::imshow("Custom Filter", newImage);
+	cv::imshow("OpenCV Sobel", sobelCV);
+	cv::imshow("Custom Sobel", sobelCustom);
+	cv::imshow("Gauss Blur", gaussBlur);
 
 	cv::waitKey(0);
 	return 0;
