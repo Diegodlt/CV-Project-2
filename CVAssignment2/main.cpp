@@ -22,39 +22,45 @@ const int sobelY[3][3] = {
 
 void applyBoxFilter(cv::Mat& image, cv::Mat& dest);
 void applySobelFilter(cv::Mat& image, cv::Mat& dest, bool xdir);
+void calculateTotalSobel(cv::Mat xImage, cv::Mat yImage, cv::Mat& dest);
 
 int main() {
-	cv::Mat image = cv::imread("einstein.jpg", cv::IMREAD_GRAYSCALE);
+	cv::Mat image = cv::imread("bicycle.bmp", cv::IMREAD_GRAYSCALE);
+	num = boxSize / 2;
 
 	// Exit if image is empty
 	if (image.empty()) {
 		cout << "Image is Empty" << endl;
 		exit(0);
 	}
+	// Create new image and assign the dimension of the box
+	cv::Mat newImage(cv::Size(image.cols, image.rows), CV_8U);
+	cv::Mat xImage(cv::Size(image.cols, image.rows), CV_8U);
+	cv::Mat yImage(cv::Size(image.cols, image.rows), CV_8U);
 
 	// Get input from user
 	cout << image.cols << " + " << image.rows << endl;
 	cout << "Number of channels: " << image.channels() << endl;
 	cout << "Enter box size: "; cin >> boxSize;
 
-	// Create new image and assign the dimension of the box
-	cv::Mat newImage(cv::Size(image.cols, image.rows), CV_8U);
-	num = boxSize / 2;
-
+	// Box filter
 	//applyBoxFilter(image, newImage);
-	applySobelFilter(image, newImage, true);
-	cv::imshow("Sobel X", newImage);
 
-	applySobelFilter(image, newImage, false);
-	cv::imshow("Sobel Y", newImage);
+	// Sobel X-direction
+	applySobelFilter(image, xImage, true);
+	cv::imshow("Sobel X", xImage);
+	// Sobel Y-direction
+	applySobelFilter(image, yImage, false);
+	cv::imshow("Sobel Y", yImage);
 	
+	calculateTotalSobel(xImage, yImage, newImage);
 	// Built-in OpenCV function
 	//cv::Mat cvBlur;
 	//cv::blur(image, cvBlur, cv::Size(boxSize, boxSize));
 
 	//cv::imshow("CV Blur", cvBlur);
 	cv::imshow("Original", image);
-	cv::imshow("Custom Blur", newImage);
+	cv::imshow("Custom Filter", newImage);
 
 	cv::waitKey(0);
 	return 0;
@@ -100,4 +106,15 @@ void applySobelFilter(cv::Mat& image, cv::Mat& dest, bool xdir) {
 			dest.at<uchar>(i, j) = cv::saturate_cast<uchar>(sum);
 		}
 	}
+}
+
+void calculateTotalSobel(cv::Mat xImage, cv::Mat yImage, cv::Mat& dest) {
+	
+	for (int i = 0; i < xImage.rows; i++) {
+		for (int j = 0; j < xImage.cols; j++) {
+			int result = sqrt( ( xImage.at<uchar>(i, j)*xImage.at<uchar>(i, j) ) + (yImage.at<uchar>(i, j)*yImage.at<uchar>(i, j)));
+			dest.at<uchar>(i, j) = cv::saturate_cast<uchar>(result);
+		}
+	}
+
 }
