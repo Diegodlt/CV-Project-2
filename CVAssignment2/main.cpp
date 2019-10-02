@@ -5,8 +5,9 @@
 
 using namespace std;
 
-int num = 0;
+int magnitude = 0;
 int boxSize = 3;// Default box size
+const int kernelSize = 3;
 
 const int sobelX[3][3] = {
 	{-1, 0 , 1},
@@ -25,8 +26,9 @@ void applySobelFilter(cv::Mat& image, cv::Mat& dest, bool xdir);
 void calculateTotalSobel(cv::Mat xImage, cv::Mat yImage, cv::Mat& dest);
 
 int main() {
-	cv::Mat image = cv::imread("einstein.jpg", cv::IMREAD_GRAYSCALE);
-	num = boxSize / 2;
+	cv::Mat image = cv::imread("bicycle.bmp");
+	cv::Mat imageGray = cv::imread("bicycle.bmp", cv::IMREAD_GRAYSCALE);
+	magnitude = boxSize / 2;
 
 	// Exit if image is empty
 	if (image.empty()) {
@@ -34,13 +36,13 @@ int main() {
 		exit(0);
 	}
 	// Create some images and assign them dimension of the input image
+	cv::Mat blurCustom(cv::Size(image.cols, image.rows), CV_8UC3);
+	cv::Mat gaussBlur; 
 	cv::Mat sobelCustom(cv::Size(image.cols, image.rows), CV_8U);
-	cv::Mat blurCustom(cv::Size(image.cols, image.rows), CV_8U);
-	cv::Mat gaussBlur(cv::Size(image.cols, image.rows), CV_8U);
+	cv::Mat sobelX;
+	cv::Mat sobelY; 
 	cv::Mat xImage(cv::Size(image.cols, image.rows), CV_8U);
 	cv::Mat yImage(cv::Size(image.cols, image.rows), CV_8U);
-	cv::Mat sobelX(cv::Size(image.cols, image.rows), CV_8U);
-	cv::Mat sobelY(cv::Size(image.cols, image.rows), CV_8U);
 
 	// Get input from user
 	cout << image.cols << " + " << image.rows << endl;
@@ -48,14 +50,14 @@ int main() {
 	cout << "Enter box size: "; cin >> boxSize;
 
 	// Box filter
-	//applyBoxFilter(image, blurCustom);
+	applyBoxFilter(image, blurCustom);
 
 	// Sobel X-direction
-	applySobelFilter(image, xImage, true);
-	//cv::imshow("Sobel X", xImage);
+	applySobelFilter(imageGray, xImage, true);
+	cv::imshow("Sobel X", xImage);
 	// Sobel Y-direction
-	applySobelFilter(image, yImage, false);
-	//cv::imshow("Sobel Y", yImage);
+	applySobelFilter(imageGray, yImage, false);
+	cv::imshow("Sobel Y", yImage);
 	
 	calculateTotalSobel(xImage, yImage, sobelCustom);
 
@@ -63,15 +65,18 @@ int main() {
 	cv::Mat cvBlur;
 	cv::blur(image, cvBlur, cv::Size(boxSize, boxSize));
 
-	cv::Sobel(image, sobelX, CV_8U, 1, 0);
-	cv::Sobel(image, sobelY, CV_8U, 0, 1);
+	cv::Sobel(imageGray, sobelX, -1, 1, 0);
+	cv::imshow("CV Sobel X", sobelX);
+	cv::Sobel(imageGray, sobelY, -1, 0, 1);
+	cv::imshow("CV Sobel Y", sobelY);
 	cv::Mat sobelCV = abs(sobelX) + abs(sobelY);
 
-	cv::GaussianBlur(image, gaussBlur, cv::Size(0,0), 1);
+	cv::GaussianBlur(image, gaussBlur, cv::Size(0,0), 5);
 
 	/* Resutls */
-	//cv::imshow("CV Blur", cvBlur);
 	cv::imshow("Original", image);
+	cv::imshow("Custom blur", blurCustom);
+	cv::imshow("CV Blur", cvBlur);
 	cv::imshow("OpenCV Sobel", sobelCV);
 	cv::imshow("Custom Sobel", sobelCustom);
 	cv::imshow("Gauss Blur", gaussBlur);
@@ -82,14 +87,14 @@ int main() {
 
 void applyBoxFilter(cv::Mat& image, cv::Mat& dest ) {
 
-	for (int i = num; i < image.rows - num; i++) {
-		for (int j = num; j < image.cols - num; j++) {
+	for (int i = magnitude; i < image.rows - magnitude; i++) {
+		for (int j = magnitude; j < image.cols - magnitude; j++) {
 			for (int c = 0; c < image.channels(); c++) {
 				int  avg = 0;
 				for (int k = 0; k < boxSize; k++) {
 					for (int n = 0; n < boxSize; n++) {
-						int x = num - k;
-						int y = num - n;
+						int x = magnitude - k;
+						int y = magnitude - n;
 						avg += image.at<cv::Vec3b>(i - x, j - y)[c];
 					}
 				}
@@ -101,13 +106,13 @@ void applyBoxFilter(cv::Mat& image, cv::Mat& dest ) {
 
 void applySobelFilter(cv::Mat& image, cv::Mat& dest, bool xdir) {
 
-	for (int i = num; i < image.rows - num; i++) {
-		for (int j = num; j < image.cols - num; j++) {
+	for (int i = magnitude; i < image.rows - magnitude; i++) {
+		for (int j = magnitude; j < image.cols - magnitude; j++) {
 			int sum = 0;
-			for (int k = 0; k < boxSize; k++) {
-				for (int n = 0; n < boxSize; n++) {
-					int x = num - k;
-					int y = num - n;
+			for (int k = 0; k < kernelSize; k++) {
+				for (int n = 0; n < kernelSize; n++) {
+					int x = magnitude - k;
+					int y = magnitude - n;
 					if (xdir) {
 						sum += image.at<uchar>(i - x, j - y) * sobelX[k][n];
 					}
@@ -125,7 +130,9 @@ void calculateTotalSobel(cv::Mat xImage, cv::Mat yImage, cv::Mat& dest) {
 	
 	for (int i = 0; i < xImage.rows; i++) {
 		for (int j = 0; j < xImage.cols; j++) {
-			int result = sqrt( ( xImage.at<uchar>(i, j)*xImage.at<uchar>(i, j) ) + (yImage.at<uchar>(i, j)*yImage.at<uchar>(i, j)));
+			int result = 
+				sqrt( ( xImage.at<uchar>(i, j)*xImage.at<uchar>(i, j) ) + 
+				(yImage.at<uchar>(i, j)*yImage.at<uchar>(i, j)));
 			dest.at<uchar>(i, j) = cv::saturate_cast<uchar>(result);
 		}
 	}
